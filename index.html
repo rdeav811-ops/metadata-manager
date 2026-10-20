@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f4ef">
+  <title>Reelroom — Media Metadata Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #202723;
+      --muted: #77807a;
+      --line: #e5e7df;
+      --paper: #f5f4ef;
+      --white: #fffefa;
+      --green: #276b50;
+      --green-dark: #1e503d;
+      --green-wash: #e8f0e9;
+      --coral: #d97759;
+      --yellow: #e9bd66;
+      --mono: "DM Mono", monospace;
+      --sans: "Manrope", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 14px/1.5 var(--sans); }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    .shell { min-height: 100vh; display: grid; grid-template-columns: 238px minmax(0, 1fr); }
+    .sidebar { min-height: 100vh; background: var(--white); border-right: 1px solid var(--line); display: flex; flex-direction: column; padding: 26px 16px 18px; }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 0 10px; margin-bottom: 40px; }
+    .brand-mark { width: 34px; height: 34px; background: var(--green); border-radius: 10px; display: grid; place-items: center; color: white; }
+    .brand-mark svg { width: 19px; height: 19px; }
+    .brand-name { font-size: 16px; font-weight: 800; letter-spacing: 0; }
+    .workspace-label, .nav-label { padding: 0 11px; color: #929991; font: 10px var(--mono); letter-spacing: 0; text-transform: uppercase; }
+    .workspace-switch { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px; margin: 9px 0 30px; text-align: left; background: transparent; border: 1px solid var(--line); border-radius: 7px; cursor: pointer; }
+    .workspace-avatar { width: 28px; height: 28px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 5px; background: #f3e4ce; color: #805b2a; font-size: 11px; font-weight: 800; }
+    .workspace-copy { min-width: 0; flex: 1; }
+    .workspace-copy strong, .workspace-copy span { display: block; }
+    .workspace-copy strong { font-size: 12px; }
+    .workspace-copy span { color: var(--muted); font-size: 10px; }
+    .nav-label { margin: 0 0 10px; }
+    .nav { display: grid; gap: 4px; }
+    .nav-item { width: 100%; display: flex; align-items: center; gap: 11px; padding: 10px 11px; border: 0; border-radius: 6px; background: transparent; color: #606a63; text-align: left; cursor: pointer; }
+    .nav-item svg { width: 17px; height: 17px; stroke-width: 1.7; }
+    .nav-item.active { background: var(--green-wash); color: var(--green-dark); font-weight: 700; }
+    .nav-count { margin-left: auto; color: #8c958e; font: 11px var(--mono); }
+    .sidebar-bottom { margin-top: auto; }
+    .connector { padding: 14px; border: 1px solid var(--line); border-radius: 7px; background: #fbfaf6; }
+    .connector-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .connector-top strong { font-size: 12px; }
+    .soon { padding: 3px 6px; border-radius: 3px; background: #f2eadb; color: #826a42; font: 9px var(--mono); text-transform: uppercase; }
+    .connector p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .disclaimer { margin: 12px 3px 0; color: #929991; font-size: 10px; line-height: 1.55; }
+    main { min-width: 0; padding: 0 42px 48px; }
+    .topbar { height: 72px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
+    .breadcrumb { color: var(--muted); font-size: 12px; }
+    .breadcrumb strong { color: var(--ink); font-weight: 700; }
+    .top-actions { display: flex; align-items: center; gap: 12px; }
+    .sync-label { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; }
+    .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #69a77e; }
+    .avatar { width: 31px; height: 31px; display: grid; place-items: center; border: 1px solid #dfcfb7; border-radius: 50%; background: #f4e9d8; color: #755d3e; font-size: 10px; font-weight: 800; }
+    .content { max-width: 1280px; margin: 0 auto; }
+    .page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; padding: 33px 0 26px; }
+    .eyebrow { margin: 0 0 7px; color: var(--green); font: 10px var(--mono); text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(25px, 3vw, 34px); font-weight: 700; letter-spacing: 0; line-height: 1.2; }
+    .page-subtitle { margin: 7px 0 0; color: var(--muted); font-size: 12px; }
+    .button { min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 13px; border: 1px solid var(--line); border-radius: 5px; background: var(--white); cursor: pointer; font-size: 12px; font-weight: 700; transition: background .16s, transform .16s; }
+    .button:hover { background: #f0f1e9; }
+    .button:active { transform: translateY(1px); }
+    .button svg { width: 15px; height: 15px; }
+    .button-primary { border-color: var(--green); background: var(--green); color: white; }
+    .button-primary:hover { background: var(--green-dark); }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 25px; border: 1px solid var(--line); border-radius: 7px; background: var(--white); }
+    .stat { min-height: 88px; padding: 16px 19px; border-right: 1px solid var(--line); }
+    .stat:last-child { border-right: 0; }
+    .stat-label { color: var(--muted); font-size: 11px; }
+    .stat-value { display: flex; align-items: baseline; gap: 8px; margin-top: 5px; font-size: 23px; font-weight: 700; line-height: 1.2; }
+    .stat-note { color: #879088; font: 10px var(--mono); }
+    .stat-note.good { color: var(--green); }
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 13px; }
+    .tabs { display: flex; gap: 18px; align-items: center; }
+    .tab { position: relative; padding: 9px 0; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 12px; }
+    .tab.active { color: var(--ink); font-weight: 800; }
+    .tab.active::after { position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; background: var(--green); content: ""; }
+    .tab-count { margin-left: 4px; color: #929991; font: 10px var(--mono); }
+    .table-actions { display: flex; gap: 8px; }
+    .search { width: min(245px, 50vw); height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 10px; border: 1px solid var(--line); border-radius: 5px; background: var(--white); }
+    .search svg { width: 15px; height: 15px; flex: 0 0 auto; color: #858d86; }
+    .search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 11px; }
+    .search input::placeholder { color: #9aa099; }
+    select { min-height: 36px; padding: 0 28px 0 10px; border: 1px solid var(--line); border-radius: 5px; background: var(--white); color: #59625b; font-size: 11px; }
+    .table-wrap { overflow: hidden; border: 1px solid var(--line); border-radius: 7px; background: var(--white); }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    thead { background: #faf9f5; }
+    th { height: 39px; padding: 0 13px; border-bottom: 1px solid var(--line); color: #878f88; font: 9px var(--mono); text-transform: uppercase; white-space: nowrap; }
+    td { padding: 10px 13px; border-bottom: 1px solid #eff0ea; color: #657068; font-size: 11px; white-space: nowrap; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: #fcfcf8; }
+    .title-cell { display: flex; align-items: center; gap: 12px; min-width: 210px; color: var(--ink); }
+    .poster { width: 37px; height: 49px; flex: 0 0 auto; overflow: hidden; border-radius: 3px; background: #d8ded7; object-fit: cover; }
+    .poster-fallback { display: grid; place-items: center; color: white; font: 9px var(--mono); }
+    .title-copy strong, .title-copy span { display: block; }
+    .title-copy strong { max-width: 225px; overflow: hidden; font-size: 11px; text-overflow: ellipsis; }
+    .title-copy span { margin-top: 3px; color: #909890; font-size: 10px; }
+    .type-label { color: #67716a; }
+    .genre { color: #59645d; }
+    .status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 7px; border-radius: 3px; background: #eef2e9; color: #55704e; font-size: 10px; }
+    .status::before { width: 5px; height: 5px; border-radius: 50%; background: #78a46a; content: ""; }
+    .status.incomplete { background: #f8eedf; color: #89653a; }
+    .status.incomplete::before { background: #d49c46; }
+    .status.queued { background: #edf0f4; color: #667589; }
+    .status.queued::before { background: #8395ac; }
+    .confidence { display: flex; align-items: center; gap: 7px; font: 10px var(--mono); }
+    .confidence-track { width: 45px; height: 4px; overflow: hidden; border-radius: 3px; background: #e8eae4; }
+    .confidence-track span { display: block; height: 100%; border-radius: inherit; background: #6a9a73; }
+    .row-menu { border: 0; background: transparent; color: #89918a; font-size: 17px; cursor: pointer; }
+    .empty { display: none; padding: 42px 15px; color: var(--muted); text-align: center; }
+    .empty strong { display: block; margin-bottom: 4px; color: var(--ink); }
+    .table-footer { display: flex; justify-content: space-between; gap: 10px; padding: 12px 14px; border-top: 1px solid var(--line); color: #858e86; font-size: 10px; }
+    dialog { width: min(440px, calc(100% - 30px)); padding: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--white); color: var(--ink); box-shadow: 0 20px 70px #20272330; }
+    dialog::backdrop { background: #1d292380; backdrop-filter: blur(2px); }
+    .dialog-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 21px 22px 14px; border-bottom: 1px solid var(--line); }
+    .dialog-head h2 { margin: 0; font-size: 18px; }
+    .dialog-head p { margin: 4px 0 0; color: var(--muted); font-size: 11px; }
+    .close-button { width: 28px; height: 28px; display: grid; place-items: center; border: 0; border-radius: 4px; background: transparent; color: var(--muted); cursor: pointer; }
+    .close-button:hover { background: var(--paper); }
+    .form-body { display: grid; gap: 14px; padding: 19px 22px 22px; }
+    .field { display: grid; gap: 6px; }
+    .field label { color: #68716a; font-size: 11px; font-weight: 700; }
+    .field input, .field select { width: 100%; height: 38px; padding: 0 10px; border: 1px solid var(--line); border-radius: 4px; background: white; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 6px; }
+    @media (max-width: 1050px) {
+      .shell { grid-template-columns: 205px minmax(0, 1fr); }
+      main { padding-right: 25px; padding-left: 25px; }
+      .hide-medium { display: none; }
+    }
+    @media (max-width: 760px) {
+      .shell { display: block; }
+      .sidebar { min-height: 0; flex-direction: row; align-items: center; gap: 12px; padding: 12px 16px; border-right: 0; border-bottom: 1px solid var(--line); }
+      .brand { margin: 0 auto 0 0; padding: 0; }
+      .workspace-label, .workspace-switch, .nav-label, .sidebar-bottom { display: none; }
+      .nav { display: flex; }
+      .nav-item { width: auto; padding: 8px; }
+      .nav-item span { display: none; }
+      .nav-count { display: none; }
+      main { padding: 0 18px 32px; }
+      .topbar { height: 55px; }
+      .sync-label { font-size: 0; }
+      .page-heading { padding: 25px 0 20px; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .stat:nth-child(2) { border-right: 0; }
+      .stat:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .stat { min-height: 76px; padding: 12px 14px; }
+      .stat-value { font-size: 20px; }
+      .toolbar { align-items: flex-start; }
+      .table-actions { width: 100%; }
+      .search { flex: 1; width: auto; }
+      .table-wrap { overflow-x: auto; }
+      table { min-width: 720px; }
+      .table-footer { min-width: 720px; }
+    }
+    @media (max-width: 430px) {
+      .sidebar { gap: 5px; padding: 10px 12px; }
+      .brand { gap: 7px; }
+      .brand-name { font-size: 14px; }
+      .brand-mark { width: 30px; height: 30px; }
+      .nav { gap: 0; }
+      .page-heading { align-items: flex-start; flex-direction: column; }
+      .page-heading .button { align-self: stretch; }
+      .tabs { gap: 14px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="m10 9 5 3-5 3V9Z" fill="currentColor" stroke="none"/></svg></div>
+        <span class="brand-name">reelroom</span>
+      </div>
+      <div class="workspace-label">Workspace</div>
+      <button class="workspace-switch" type="button" aria-label="Current workspace: Personal library">
+        <span class="workspace-avatar">PL</span>
+        <span class="workspace-copy"><strong>Personal library</strong><span>Free workspace</span></span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#828a83" stroke-width="1.8"><path d="m8 10 4 4 4-4"/></svg>
+      </button>
+      <div class="nav-label">Catalogue</div>
+      <nav class="nav" aria-label="Catalogue views">
+        <button class="nav-item active" type="button" data-view="all" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="4" width="6" height="7" rx="1"/><rect x="14" y="4" width="6" height="7" rx="1"/><rect x="4" y="15" width="6" height="5" rx="1"/><rect x="14" y="15" width="6" height="5" rx="1"/></svg><span>All titles</span><span class="nav-count" id="nav-total">08</span></button>
+        <button class="nav-item" type="button" data-view="movie"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3V9Z"/></svg><span>Movies</span></button>
+        <button class="nav-item" type="button" data-view="series"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 4v16m6-16v16M4 9h5m-5 6h5m6-6h5m-5 6h5"/></svg><span>Series</span></button>
+        <button class="nav-item" type="button" data-view="incomplete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3 2.8 19h18.4L12 3Z"/><path d="M12 9v4m0 3h.01"/></svg><span>Needs attention</span></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="connector">
+          <div class="connector-top"><strong>TMDB connection</strong><span class="soon">Coming soon</span></div>
+          <p>Planned lookup: titles, descriptions, posters, release dates, genres, languages and production countries.</p>
+        </div>
+        <p class="disclaimer">This project is not endorsed or certified by TMDB.</p>
+      </div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div class="breadcrumb">Workspace <span aria-hidden="true">/</span> <strong>Catalogue</strong></div>
+        <div class="top-actions"><span class="sync-label"><span class="sync-dot"></span>All changes saved</span><span class="avatar" aria-label="Profile: Alex Morgan">AM</span></div>
+      </header>
+      <div class="content">
+        <section class="page-heading" aria-labelledby="page-title">
+          <div><p class="eyebrow">Your collection</p><h1 id="page-title">A good story, well kept.</h1><p class="page-subtitle">Organise the details behind your watchlist.</p></div>
+          <button class="button button-primary" type="button" id="add-open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>Add a title</button>
+        </section>
+
+        <section class="stats" aria-label="Catalogue summary">
+          <div class="stat"><div class="stat-label">Titles in library</div><div class="stat-value" id="stat-total">08</div></div>
+          <div class="stat"><div class="stat-label">Movies</div><div class="stat-value" id="stat-movies">05</div></div>
+          <div class="stat"><div class="stat-label">Series</div><div class="stat-value" id="stat-series">03</div></div>
+          <div class="stat"><div class="stat-label">Metadata complete</div><div class="stat-value"><span id="stat-complete">75%</span><span class="stat-note good">6 of 8 titles</span></div></div>
+        </section>
+
+        <section aria-label="Media catalogue">
+          <div class="toolbar">
+            <div class="tabs" role="tablist" aria-label="Filter by type">
+              <button class="tab active" role="tab" aria-selected="true" type="button" data-filter="all">All titles <span class="tab-count" id="tab-all-count">08</span></button>
+              <button class="tab" role="tab" aria-selected="false" type="button" data-filter="movie">Movies</button>
+              <button class="tab" role="tab" aria-selected="false" type="button" data-filter="series">Series</button>
+            </div>
+            <div class="table-actions">
+              <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4 4"/></svg><input id="search" type="search" placeholder="Search titles..." aria-label="Search titles"></label>
+              <select id="sort" aria-label="Sort titles"><option value="title">Title A–Z</option><option value="year-desc">Year: newest</option><option value="year-asc">Year: oldest</option></select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th scope="col">Title</th><th scope="col">Type</th><th scope="col">Year</th><th scope="col" class="hide-medium">Genre</th><th scope="col">Metadata</th><th scope="col" class="hide-medium">Completeness</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+              <tbody id="catalogue-body"></tbody>
+            </table>
+            <div class="empty" id="empty-state"><strong>No titles found</strong>Try another search or add something to your library.</div>
+            <div class="table-footer"><span id="result-count">Showing 8 titles</span><span>Updated just now</span></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="add-dialog" aria-labelledby="dialog-title">
+    <form id="add-form">
+      <div class="dialog-head"><div><h2 id="dialog-title">Add to your library</h2><p>Start with the details you know.</p></div><button class="close-button" type="button" id="add-close" aria-label="Close dialog"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 6-12 12M6 6l12 12"/></svg></button></div>
+      <div class="form-body">
+        <div class="field"><label for="title-input">Title</label><input id="title-input" name="title" required maxlength="100" placeholder="e.g. In the Mood for Love"></div>
+        <div class="field-row">
+          <div class="field"><label for="type-input">Type</label><select id="type-input" name="type"><option value="movie">Movie</option><option value="series">Series</option></select></div>
+          <div class="field"><label for="year-input">Release year</label><input id="year-input" name="year" type="number" min="1888" max="2099" placeholder="2024"></div>
+        </div>
+        <div class="field"><label for="genre-input">Genre</label><input id="genre-input" name="genre" maxlength="40" placeholder="e.g. Drama"></div>
+        <div class="form-actions"><button class="button" type="button" id="cancel-add">Cancel</button><button class="button button-primary" type="submit">Add title</button></div>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    const posterImages = [
+      "photo-1518709268805-4e9042af9f23", "photo-1489599849927-2ee91cede3ba",
+      "photo-1440404653325-ab127d49abc1", "photo-1478720568477-152d9b164e26",
+      "photo-1500530855697-b586d89ba3ee", "photo-1519608487953-e999c86e7455",
+      "photo-1518837695005-2083093ee35b", "photo-1470252649378-9c29740c9fa8"
+    ];
+    const titles = [
+      { title: "Past Lives", type: "movie", year: 2023, genre: "Romance · Drama", status: "Complete", score: 100 },
+      { title: "The Bear", type: "series", year: 2022, genre: "Comedy · Drama", status: "Complete", score: 100 },
+      { title: "Perfect Days", type: "movie", year: 2023, genre: "Drama", status: "Complete", score: 100 },
+      { title: "Severance", type: "series", year: 2022, genre: "Sci-fi · Thriller", status: "Needs details", score: 68 },
+      { title: "Aftersun", type: "movie", year: 2022, genre: "Drama", status: "Complete", score: 100 },
+      { title: "The Last of Us", type: "series", year: 2023, genre: "Drama · Adventure", status: "In progress", score: 82 },
+      { title: "All of Us Strangers", type: "movie", year: 2023, genre: "Fantasy · Drama", status: "Needs details", score: 54 },
+      { title: "Anatomy of a Fall", type: "movie", year: 2023, genre: "Thriller · Drama", status: "Complete", score: 100 }
+    ];
+    let activeFilter = "all";
+    const body = document.querySelector("#catalogue-body");
+    const search = document.querySelector("#search");
+    const statusClass = status => status === "Complete" ? "" : status === "In progress" ? " queued" : " incomplete";
+    const esc = value => String(value).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+
+    function render() {
+      const query = search.value.trim().toLowerCase();
+      const sort = document.querySelector("#sort").value;
+      const visible = titles.filter(item => (activeFilter === "all" || (activeFilter === "incomplete" ? item.status !== "Complete" : item.type === activeFilter)) && `${item.title} ${item.genre} ${item.year}`.toLowerCase().includes(query));
+      visible.sort((a, b) => sort === "year-desc" ? b.year - a.year : sort === "year-asc" ? a.year - b.year : a.title.localeCompare(b.title));
+      body.innerHTML = visible.map(item => {
+        const index = titles.indexOf(item);
+        const image = posterImages[index % posterImages.length];
+        return `<tr><td><div class="title-cell"><img class="poster" src="https://images.unsplash.com/${image}?auto=format&fit=crop&w=100&h=132&q=75" alt="" loading="lazy"><div class="title-copy"><strong>${esc(item.title)}</strong><span>${item.year} · ${item.type === "movie" ? "Film" : "TV"}</span></div></div></td><td><span class="type-label">${item.type === "movie" ? "Movie" : "Series"}</span></td><td>${item.year}</td><td class="genre hide-medium">${esc(item.genre)}</td><td><span class="status${statusClass(item.status)}">${esc(item.status)}</span></td><td class="hide-medium"><span class="confidence"><span class="confidence-track"><span style="width:${item.score}%"></span></span>${item.score}%</span></td><td><button class="row-menu" type="button" aria-label="More options for ${esc(item.title)}" title="${esc(item.title)}">···</button></td></tr>`;
+      }).join("");
+      document.querySelector("#empty-state").style.display = visible.length ? "none" : "block";
+      document.querySelector("#result-count").textContent = `Showing ${visible.length} of ${titles.length} titles`;
+      const movies = titles.filter(item => item.type === "movie").length;
+      const series = titles.length - movies;
+      const complete = titles.filter(item => item.status === "Complete").length;
+      document.querySelector("#stat-total").textContent = String(titles.length).padStart(2, "0");
+      document.querySelector("#stat-movies").textContent = String(movies).padStart(2, "0");
+      document.querySelector("#stat-series").textContent = String(series).padStart(2, "0");
+      document.querySelector("#stat-complete").textContent = `${Math.round(complete / titles.length * 100)}%`;
+      document.querySelector("#nav-total").textContent = String(titles.length).padStart(2, "0");
+      document.querySelector("#tab-all-count").textContent = String(titles.length).padStart(2, "0");
+    }
+
+    document.querySelectorAll("[data-filter]").forEach(button => button.addEventListener("click", () => {
+      activeFilter = button.dataset.filter;
+      document.querySelectorAll("[data-filter]").forEach(tab => { const active = tab === button; tab.classList.toggle("active", active); tab.setAttribute("aria-selected", String(active)); });
+      document.querySelectorAll(".nav-item").forEach(nav => nav.classList.toggle("active", nav.dataset.view === activeFilter));
+      render();
+    }));
+    document.querySelectorAll("[data-view]").forEach(button => button.addEventListener("click", () => {
+      const filter = button.dataset.view;
+      activeFilter = filter;
+      document.querySelectorAll(".nav-item").forEach(nav => nav.classList.toggle("active", nav === button));
+      const tab = document.querySelector(`[data-filter="${filter === "incomplete" ? "all" : filter}"]`);
+      document.querySelectorAll("[data-filter]").forEach(item => { const active = item === tab; item.classList.toggle("active", active); item.setAttribute("aria-selected", String(active)); });
+      render();
+    }));
+    search.addEventListener("input", render);
+    document.querySelector("#sort").addEventListener("change", render);
+
+    const dialog = document.querySelector("#add-dialog");
+    document.querySelector("#add-open").addEventListener("click", () => { dialog.showModal(); document.querySelector("#title-input").focus(); });
+    ["#add-close", "#cancel-add"].forEach(selector => document.querySelector(selector).addEventListener("click", () => dialog.close()));
+    document.querySelector("#add-form").addEventListener("submit", event => {
+      event.preventDefault();
+      const form = new FormData(event.currentTarget);
+      const year = Number(form.get("year")) || new Date().getFullYear();
+      titles.unshift({ title: form.get("title").trim(), type: form.get("type"), year, genre: form.get("genre").trim() || "Genre not set", status: "Needs details", score: 30 });
+      event.currentTarget.reset();
+      activeFilter = "all";
+      document.querySelectorAll("[data-filter]").forEach(tab => { const active = tab.dataset.filter === "all"; tab.classList.toggle("active", active); tab.setAttribute("aria-selected", String(active)); });
+      document.querySelectorAll(".nav-item").forEach(nav => nav.classList.toggle("active", nav.dataset.view === "all"));
+      dialog.close();
+      render();
+    });
+    render();
+  </script>
+</body>
+</html>
